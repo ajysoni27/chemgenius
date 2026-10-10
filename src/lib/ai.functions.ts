@@ -27,7 +27,7 @@ export type CompoundInsights = z.infer<typeof compoundSchema>;
 export const getCompoundInsights = createServerFn({ method: "POST" })
   .inputValidator((d: { name: string; formula?: string; smiles?: string }) => d)
   .handler(async ({ data }) => {
-    const { aiObject } = await import("./gateway.server");
+    const { aiObject } = await import("@/server/gateway.server");
     return aiObject(
       compoundSchema,
       SYS,
@@ -53,7 +53,7 @@ export type ReactionPrediction = z.infer<typeof reactionSchema>;
 export const predictReaction = createServerFn({ method: "POST" })
   .inputValidator((d: { reactants: { name: string; formula?: string; smiles?: string }[]; conditions?: string }) => d)
   .handler(async ({ data }) => {
-    const { aiObject } = await import("./gateway.server");
+    const { aiObject } = await import("@/server/gateway.server");
     const list = data.reactants.map((r) => `${r.name} (${r.formula ?? ""}${r.smiles ? `, SMILES ${r.smiles}` : ""})`).join(" + ");
     return aiObject(
       reactionSchema,
@@ -75,7 +75,7 @@ export type ElementFacts = z.infer<typeof elementSchema>;
 export const getElementFacts = createServerFn({ method: "POST" })
   .inputValidator((d: { name: string; symbol: string }) => d)
   .handler(async ({ data }) => {
-    const { aiObject } = await import("./gateway.server");
+    const { aiObject } = await import("@/server/gateway.server");
     return aiObject(
       elementSchema,
       SYS,
@@ -94,7 +94,7 @@ export type Spectra = z.infer<typeof spectraSchema>;
 export const predictSpectra = createServerFn({ method: "POST" })
   .inputValidator((d: { name: string; smiles: string }) => d)
   .handler(async ({ data }) => {
-    const { aiObject } = await import("./gateway.server");
+    const { aiObject } = await import("@/server/gateway.server");
     return aiObject(
       spectraSchema,
       SYS,
