@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { FlaskConical, GitCompare, Wrench, Sparkles, Atom, Scale } from "lucide-react";
 import { CompoundSearch } from "@/components/chem/CompoundSearch";
@@ -29,7 +29,6 @@ const FEATURES = [
 ] as const;
 
 function Index() {
-  const nav = useNavigate();
   return (
     <div>
       <section className="grid-bg relative overflow-hidden">
@@ -52,11 +51,11 @@ function Index() {
             Explore every molecule in 2D and 3D, predict reactions, compare compounds and ask an AI chemist anything.
           </motion.p>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="mx-auto mt-10 max-w-2xl">
-            <CompoundSearch size="lg" onPick={(c) => nav({ to: "/compound/$id", params: { id: String(c.cid) } })} />
+            <CompoundSearch size="lg" onPick={(c) => askChemAI(`Tell me about ${c.title} (${c.formula})`)} />
             <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
               Try:
               {["Aspirin", "C6H12O6", "CC(=O)O", "2-acetoxybenzoic acid"].map((t) => (
-                <button key={t} onClick={() => nav({ to: "/compound/$id", params: { id: t } })} className="glass rounded-full px-3 py-1 font-mono hover:text-foreground">
+                <button key={t} onClick={() => askChemAI(`Tell me about ${t}`)} className="glass rounded-full px-3 py-1 font-mono hover:text-foreground">
                   {t}
                 </button>
               ))}
@@ -90,7 +89,7 @@ function Index() {
         <div className="no-scrollbar flex snap-x gap-4 overflow-x-auto px-4 pb-6 md:px-[max(1rem,calc((100vw-80rem)/2+1rem))]">
           {POPULAR.map((c, i) => (
             <motion.div key={c.cid} initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} className="snap-start">
-              <Link to="/compound/$id" params={{ id: String(c.cid) }}>
+              <button onClick={() => askChemAI(`Tell me about ${c.name}`)} className="text-left">
                 <TiltCard className="w-60 shrink-0 p-4 transition hover:shadow-glow">
                   <Structure2D smiles={c.smiles} height={150} />
                   <div className="mt-2 flex items-center justify-between">
@@ -99,7 +98,7 @@ function Index() {
                   </div>
                   <p className="font-mono text-sm text-neon">{subscript(c.formula)}</p>
                 </TiltCard>
-              </Link>
+              </button>
             </motion.div>
           ))}
         </div>
@@ -107,14 +106,13 @@ function Index() {
 
       <section className="mx-auto grid max-w-7xl gap-4 px-4 py-12 md:grid-cols-3">
         {FEATURES.map((f) => (
-          <Link key={f.to} to={f.to}>
+          <div key={f.to}>
             <TiltCard className="h-full p-6 transition hover:shadow-violet">
               <f.icon className="mb-4 size-8 text-neon" />
               <h3 className="text-xl font-bold">{f.title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{f.body}</p>
-              <p className="mt-4 text-sm text-neon">Open →</p>
             </TiltCard>
-          </Link>
+          </div>
         ))}
         <button onClick={() => askChemAI()} className="text-left md:col-span-3">
           <TiltCard intensity={4} className="flex items-center gap-4 p-6">

@@ -3,10 +3,6 @@ import { Atom } from "lucide-react";
 
 const LINKS = [
   { to: "/", label: "Universe" },
-  { to: "/reactions", label: "Reaction Lab" },
-  { to: "/compare", label: "Compare" },
-  { to: "/tools", label: "Tools" },
-  { to: "/favorites", label: "Saved" },
 ] as const;
 
 export function SiteNav() {
