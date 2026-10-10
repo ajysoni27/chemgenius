@@ -14,6 +14,7 @@ const SUGGESTIONS = ["Why does Aspirin work?", "What happens if I mix baking sod
 export function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [initial, setInitial] = useState<UIMessage[] | null>(null);
+  const [pending, setPending] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -24,7 +25,7 @@ export function ChatWidget() {
     const h = (e: Event) => {
       setOpen(true);
       const q = (e as CustomEvent<string>).detail;
-      if (q) window.dispatchEvent(new CustomEvent("scv-chat-send", { detail: q }));
+      if (q) setPending(q);
     };
     window.addEventListener("scv-open-chat", h);
     return () => window.removeEventListener("scv-open-chat", h);
@@ -50,7 +51,7 @@ export function ChatWidget() {
             exit={{ opacity: 0, y: 30, scale: 0.96 }}
             className="glass-strong fixed inset-x-3 bottom-20 z-50 flex h-[70vh] flex-col overflow-hidden rounded-3xl shadow-violet sm:inset-x-auto sm:right-5 sm:w-[420px]"
           >
-            <ChatBody initial={initial} onClose={() => setOpen(false)} />
+            <ChatBody initial={initial} pending={pending} clearPending={() => setPending(null)} onClose={() => setOpen(false)} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -58,7 +59,7 @@ export function ChatWidget() {
   );
 }
 
-function ChatBody({ initial, onClose }: { initial: UIMessage[]; onClose: () => void }) {
+function ChatBody({ initial, onClose, pending, clearPending }: { initial: UIMessage[]; onClose: () => void; pending: string | null; clearPending: () => void }) {
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
   const [error, setError] = useState("");
   const { messages, sendMessage, status, setMessages, stop } = useChat({
@@ -75,9 +76,10 @@ function ChatBody({ initial, onClose }: { initial: UIMessage[]; onClose: () => v
   }, [messages, status]);
 
   useEffect(() => {
-    const h = (e: Event) => send((e as CustomEvent<string>).detail);
-    window.addEventListener("scv-chat-send", h);
-    return () => window.removeEventListener("scv-chat-send", h);
+    if (pending && !busy) {
+      clearPending();
+      send(pending);
+    }
   });
 
   function send(t: string) {
