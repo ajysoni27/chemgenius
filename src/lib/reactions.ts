@@ -108,7 +108,7 @@ export function stateOf(f: string, isProduct: boolean): State {
   if (isInsoluble(f)) return "s";
   const io = splitIonic(f);
   if (io) {
-    if (!io.poly && ["Al", "Fe", "U", "Ti", "Sn"].includes(io.cat) && !isProduct) return "s";
+    if (!io.poly && ["Al", "U", "Ti", "Sn"].includes(io.cat) && !isProduct) return "s";
     return isProduct || io.poly ? "aq" : "s";
   }
   if (c.C && c.H) return "l";
