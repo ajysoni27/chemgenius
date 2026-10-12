@@ -210,5 +210,5 @@ export function solubilityClass(logS: number) {
 }
 
 export function subscript(formula: string) {
-  return formula.replace(/(\d+)/g, (d) => d.split("").map((c) => "₀₁₂₃₄₅₆₇₈₉"[Number(c)]).join(""));
+  return formula.replace(/(?<=[A-Za-z)\]}])(\d+)/g, (d) => d.split("").map((c) => "₀₁₂₃₄₅₆₇₈₉"[Number(c)]).join(""));
 }
