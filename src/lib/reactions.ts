@@ -199,7 +199,7 @@ const KNOWN: Record<string, Raw> = {
   "FeCl3|K4[Fe(CN)6]": { type: "Complexation", products: ["Fe4[Fe(CN)6]3", "KCl"], observation: "Deep intense blue precipitate — Prussian blue (iron(III) hexacyanoferrate(II)).", conditions: "Aqueous solutions, room temperature" },
   "CH4|O2": { type: "Combustion", products: ["CO2", "H2O"], observation: "Clean blue flame; heat and light released (ΔH ≈ −890 kJ/mol).", conditions: "Ignition" },
   "H2|O2": { type: "Combustion", products: ["H2O"], observation: "Explosive pop; water vapour forms (ΔH ≈ −286 kJ/mol).", conditions: "Spark / ignition" },
-  "Na|H2O": { type: "Redox", products: ["NaOH", "H2"], observation: "Sodium darts on the surface, fizzes and may ignite with a yellow flame.", conditions: "Room temperature" },
+  "H2O|Na": { type: "Redox", products: ["NaOH", "H2"], observation: "Sodium darts on the surface, fizzes and may ignite with a yellow flame.", conditions: "Room temperature" },
   "HCl|NaOH": { type: "Acid-Base", products: ["NaCl", "H2O"], observation: "No visible change; solution warms (ΔH ≈ −57 kJ/mol).", conditions: "Aqueous, room temperature" },
   "CaCO3|HCl": { type: "Gas evolution", products: ["CaCl2", "H2O", "CO2"], observation: "Effervescence — CO₂ bubbles; solid dissolves.", conditions: "Aqueous, room temperature" },
   "Fe(NO3)3|KSCN": { type: "Complexation", products: ["Fe(SCN)3", "KNO3"], observation: "Blood-red colour of iron(III) thiocyanate.", conditions: "Aqueous" },
@@ -323,7 +323,7 @@ function rule(a: string, b: string): Raw {
     const [lo, hi] = (BY_SYMBOL[x].en ?? 0) <= (BY_SYMBOL[y].en ?? 0) ? [x, y] : [y, x];
     const val = Math.abs(MONO_ANION[hi] ?? -1);
     const loVal = lo === "H" ? 1 : lo === "C" ? 4 : lo === "N" ? 3 : lo === "S" ? 2 : lo === "P" ? 3 : 1;
-    return { type: "Synthesis", products: [lo === "H" ? salt("H", 1, hi, -val).replace(/^H(\d*)(.*)/, "H$1$2") : salt(lo, loVal, hi, -val)], observation: OBS.Synthesis, conditions: "Heat / spark" };
+    return { type: "Synthesis", products: [salt(lo, loVal, hi, -val)], observation: OBS.Synthesis, conditions: "Heat / spark" };
   }
 
   // Lewis acid–base adduct (always gives a product)
