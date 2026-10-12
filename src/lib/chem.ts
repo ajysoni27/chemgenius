@@ -62,7 +62,11 @@ export type Counts = Record<string, number>;
 
 /** Parse a formula like Ca(OH)2, CuSO4·5H2O, [Fe(CN)6]3- into element counts. */
 export function parseFormula(formula: string): Counts {
-  const f = formula.replace(/\s/g, "").replace(/[+-]\d*$|\d*[+-]$/, "");
+  const f = formula
+    .replace(/\s/g, "")
+    .replace(/[↓↑]/g, "")
+    .replace(/\((s|l|g|aq)\)$/i, "")
+    .replace(/\^?\d*[+-]$/, "");
   const parts = f.split(/[·.*]/);
   const total: Counts = {};
   for (const part of parts) {
@@ -79,10 +83,10 @@ function parseGroup(s: string): Counts {
   let i = 0;
   while (i < s.length) {
     const ch = s[i];
-    if (ch === "(" || ch === "[") {
+    if (ch === "(" || ch === "[" || ch === "{") {
       stack.push({});
       i++;
-    } else if (ch === ")" || ch === "]") {
+    } else if (ch === ")" || ch === "]" || ch === "}") {
       i++;
       let num = "";
       while (i < s.length && /\d/.test(s[i])) num += s[i++];
@@ -139,8 +143,8 @@ const div = (a: Frac, b: Frac) => fr(a[0] * b[1], a[1] * b[0]);
 export function balanceEquation(eq: string): { reactants: string[]; products: string[]; coeffs: number[]; balanced: string } {
   const [lhs, rhs] = eq.split(/->|→|=>|=/).map((s) => s?.trim());
   if (!lhs || !rhs) throw new Error("Use the form: A + B -> C + D");
-  const reactants = lhs.split(/\s+\+\s+|\s*\+\s*(?=[A-Z0-9([])/).map((s) => s.trim()).filter(Boolean);
-  const products = rhs.split(/\s+\+\s+|\s*\+\s*(?=[A-Z0-9([])/).map((s) => s.trim()).filter(Boolean);
+  const reactants = lhs.split(/\s+\+\s+|\s*\+\s*(?=[A-Z0-9([{])/).map((s) => s.trim()).filter(Boolean);
+  const products = rhs.split(/\s+\+\s+|\s*\+\s*(?=[A-Z0-9([{])/).map((s) => s.trim()).filter(Boolean);
   const species = [...reactants, ...products];
   const counts = species.map(parseFormula);
   const els = Array.from(new Set(counts.flatMap((c) => Object.keys(c))));
