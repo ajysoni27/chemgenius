@@ -3,6 +3,7 @@ import { Atom } from "lucide-react";
 
 const LINKS = [
   { to: "/", label: "Universe" },
+  { to: "/reactions", label: "Reaction Lab" },
 ] as const;
 
 export function SiteNav() {
