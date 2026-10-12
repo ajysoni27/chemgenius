@@ -256,7 +256,7 @@ export function buildMolecule(input: string): Mol {
   const io = splitIonic(f);
   if (io && io.poly) {
     const anion = covalent(io.an);
-    const out: Mol = { atoms: [], bonds: [], geometry: `Ionic: ${io.cat}${io.cc > 0 ? `${io.cc}+` : ""} + ${anion.geometry.toLowerCase()} anion` };
+    const out: Mol = { atoms: [], bonds: [], geometry: `Ionic: ${io.cat}${io.cc > 1 ? io.cc : ""}⁺ cations + ${anion.geometry.toLowerCase()} anion` };
     const nA = Math.min(io.nAn, 4);
     const r = Math.max(2.2, ...anion.atoms.map((a) => Math.hypot(...a.p))) + 1.2;
     const spacing = r * 1.9;
