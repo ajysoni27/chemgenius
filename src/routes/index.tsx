@@ -52,7 +52,7 @@ function Index() {
             Explore every molecule in 2D and 3D, predict reactions, compare compounds and explore all 118 elements.
           </motion.p>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="mx-auto mt-10 max-w-2xl">
-            <CompoundSearch size="lg" onPick={(c) => goLab()`)} />
+            <CompoundSearch size="lg" onPick={() => goLab()} />
             <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
               Try:
               {["Aspirin", "C6H12O6", "CC(=O)O", "2-acetoxybenzoic acid"].map((t) => (

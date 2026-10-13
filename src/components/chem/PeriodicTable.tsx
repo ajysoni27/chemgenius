@@ -112,28 +112,7 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 }
 
 function ElementDialog({ e, onClose }: { e: Element | null; onClose: () => void }) {
-  const fetchFacts = useServerFn(getElementFacts);
-  const [facts, setFacts] = useState<ElementFacts | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
-  const [forEl, setForEl] = useState<number | null>(null);
-
-  if (e && forEl !== e.n) {
-    setForEl(e.n);
-    setErr("");
-    const c = cache.get<ElementFacts>(`el:${e.s}`);
-    setFacts(c);
-    if (!c) {
-      setLoading(true);
-      fetchFacts({ data: { name: e.name, symbol: e.s } })
-        .then((f) => {
-          cache.set(`el:${e.s}`, f);
-          setFacts(f);
-        })
-        .catch((x: Error) => setErr(x.message))
-        .finally(() => setLoading(false));
-    }
-  }
+  const [, setForEl] = useState<number | null>(null);
 
   return (
     <Dialog open={!!e} onOpenChange={(o) => !o && (onClose(), setForEl(null))}>
