@@ -15,7 +15,6 @@ import { motion } from "framer-motion";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteNav, SiteFooter } from "@/components/chem/SiteNav";
-import { ChatWidget } from "@/components/chem/ChatWidget";
 
 function NotFoundComponent() {
   return (
@@ -113,7 +112,6 @@ function RootComponent() {
         <Outlet />
       </motion.main>
       <SiteFooter />
-      <ChatWidget />
     </QueryClientProvider>
   );
 }
