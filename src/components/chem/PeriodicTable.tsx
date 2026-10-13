@@ -1,12 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useServerFn } from "@tanstack/react-start";
-import { Loader2 } from "lucide-react";
 import { ELEMENTS, classify, oxideBehaviour, CLASS_META, type Element, type ElClass } from "@/lib/chem";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { getElementFacts, type ElementFacts } from "@/lib/ai.functions";
-import { cache } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export const CLASS_STYLE: Record<ElClass, string> = {
