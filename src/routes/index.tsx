@@ -73,7 +73,7 @@ function Index() {
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.3em] text-neon">Interactive</p>
             <h2 className="text-3xl font-bold">Periodic Table</h2>
-            <p className="text-sm text-muted-foreground">Hover any element for a quick profile. Click for uses, isotopes & discovery.</p>
+            <p className="text-sm text-muted-foreground">Hover any element for a quick profile. Click for full element data.</p>
           </div>
           <Atom className="hidden size-10 text-violet md:block" />
         </div>

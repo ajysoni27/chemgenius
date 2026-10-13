@@ -141,39 +141,8 @@ function ElementDialog({ e, onClose }: { e: Element | null; onClose: () => void 
               <Row k="Melting point" v={e.mp ? `${e.mp} K` : "—"} />
               <Row k="Boiling point" v={e.bp ? `${e.bp} K` : "—"} />
               <Row k="Discovered by" v={e.by ?? "Ancient / unknown"} />
-              <Row k="Discovery year" v={facts?.discoveryYear ?? (loading ? "…" : "—")} />
-              <Row k="Acid/base (oxide)" v={facts?.oxideNature ?? oxideBehaviour(e)} />
+              <Row k="Acid/base (oxide)" v={oxideBehaviour(e)} />
             </div>
-            {loading && (
-              <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="size-4 animate-spin" /> Gathering uses, occurrence & isotopes…
-              </p>
-            )}
-            {err && <p className="text-sm text-destructive">{err}</p>}
-            {facts && (
-              <div className="space-y-4 text-sm">
-                <div>
-                  <h4 className="mb-1 font-semibold text-neon">Uses</h4>
-                  <ul className="list-disc space-y-1 pl-5 text-muted-foreground">{facts.uses.map((u) => <li key={u}>{u}</li>)}</ul>
-                </div>
-                <div>
-                  <h4 className="mb-1 font-semibold text-neon">Found in</h4>
-                  <p className="text-muted-foreground">{facts.occurrence}</p>
-                </div>
-                <div>
-                  <h4 className="mb-1 font-semibold text-neon">Isotopes</h4>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {facts.isotopes.map((i) => (
-                      <div key={i.isotope} className="glass rounded-lg p-2">
-                        <p className="font-mono font-semibold">{i.isotope} <span className="text-xs text-muted-foreground">{i.abundance}</span></p>
-                        <p className="text-xs text-muted-foreground">{i.note}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <p className="rounded-lg border border-violet/40 bg-violet/10 p-3 text-xs">💡 {facts.funFact}</p>
-              </div>
-            )}
           </>
         )}
       </DialogContent>
