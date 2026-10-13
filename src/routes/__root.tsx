@@ -15,6 +15,7 @@ import { motion } from "framer-motion";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteNav, SiteFooter } from "@/components/chem/SiteNav";
+import { ChemAIChat } from "@/components/chem/ChemAIChat";
 
 function NotFoundComponent() {
   return (
