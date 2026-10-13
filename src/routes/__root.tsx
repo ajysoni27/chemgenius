@@ -113,6 +113,7 @@ function RootComponent() {
         <Outlet />
       </motion.main>
       <SiteFooter />
+      <ChemAIChat />
     </QueryClientProvider>
   );
 }
