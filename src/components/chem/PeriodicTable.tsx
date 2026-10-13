@@ -1,12 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useServerFn } from "@tanstack/react-start";
-import { Loader2 } from "lucide-react";
 import { ELEMENTS, classify, oxideBehaviour, CLASS_META, type Element, type ElClass } from "@/lib/chem";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { getElementFacts, type ElementFacts } from "@/lib/ai.functions";
-import { cache } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 export const CLASS_STYLE: Record<ElClass, string> = {
@@ -112,28 +108,7 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 }
 
 function ElementDialog({ e, onClose }: { e: Element | null; onClose: () => void }) {
-  const fetchFacts = useServerFn(getElementFacts);
-  const [facts, setFacts] = useState<ElementFacts | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
-  const [forEl, setForEl] = useState<number | null>(null);
-
-  if (e && forEl !== e.n) {
-    setForEl(e.n);
-    setErr("");
-    const c = cache.get<ElementFacts>(`el:${e.s}`);
-    setFacts(c);
-    if (!c) {
-      setLoading(true);
-      fetchFacts({ data: { name: e.name, symbol: e.s } })
-        .then((f) => {
-          cache.set(`el:${e.s}`, f);
-          setFacts(f);
-        })
-        .catch((x: Error) => setErr(x.message))
-        .finally(() => setLoading(false));
-    }
-  }
+  const [, setForEl] = useState<number | null>(null);
 
   return (
     <Dialog open={!!e} onOpenChange={(o) => !o && (onClose(), setForEl(null))}>
@@ -162,39 +137,8 @@ function ElementDialog({ e, onClose }: { e: Element | null; onClose: () => void 
               <Row k="Melting point" v={e.mp ? `${e.mp} K` : "—"} />
               <Row k="Boiling point" v={e.bp ? `${e.bp} K` : "—"} />
               <Row k="Discovered by" v={e.by ?? "Ancient / unknown"} />
-              <Row k="Discovery year" v={facts?.discoveryYear ?? (loading ? "…" : "—")} />
-              <Row k="Acid/base (oxide)" v={facts?.oxideNature ?? oxideBehaviour(e)} />
+              <Row k="Acid/base (oxide)" v={oxideBehaviour(e)} />
             </div>
-            {loading && (
-              <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="size-4 animate-spin" /> Gathering uses, occurrence & isotopes…
-              </p>
-            )}
-            {err && <p className="text-sm text-destructive">{err}</p>}
-            {facts && (
-              <div className="space-y-4 text-sm">
-                <div>
-                  <h4 className="mb-1 font-semibold text-neon">Uses</h4>
-                  <ul className="list-disc space-y-1 pl-5 text-muted-foreground">{facts.uses.map((u) => <li key={u}>{u}</li>)}</ul>
-                </div>
-                <div>
-                  <h4 className="mb-1 font-semibold text-neon">Found in</h4>
-                  <p className="text-muted-foreground">{facts.occurrence}</p>
-                </div>
-                <div>
-                  <h4 className="mb-1 font-semibold text-neon">Isotopes</h4>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {facts.isotopes.map((i) => (
-                      <div key={i.isotope} className="glass rounded-lg p-2">
-                        <p className="font-mono font-semibold">{i.isotope} <span className="text-xs text-muted-foreground">{i.abundance}</span></p>
-                        <p className="text-xs text-muted-foreground">{i.note}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <p className="rounded-lg border border-violet/40 bg-violet/10 p-3 text-xs">💡 {facts.funFact}</p>
-              </div>
-            )}
           </>
         )}
       </DialogContent>
