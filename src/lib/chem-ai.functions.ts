@@ -109,3 +109,39 @@ export const askChemAI = createServerFn({ method: "POST" })
       };
     }
   });
+
+type ExplainInput = { name: string; formula: string; iupac: string; mw: number; smiles: string };
+
+export const explainCompound = createServerFn({ method: "POST" })
+  .inputValidator((data: ExplainInput) => data)
+  .handler(async ({ data }) => {
+    const facts = `PubChem data — Name: ${data.name}; Formula: ${data.formula}; IUPAC: ${data.iupac || "n/a"}; MW: ${data.mw || "n/a"} g/mol; SMILES: ${data.smiles}`;
+    try {
+      const apiKey = process.env.LOVABLE_API_KEY;
+      if (!apiKey) throw new Error("missing key");
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "openai/gpt-6-astra",
+          reasoning_effort: "low",
+          max_completion_tokens: 1500,
+          messages: [
+            { role: "system", content: SYSTEM_PROMPT + " Keep it concise (under 300 words). Plain text with short headings, no markdown tables." },
+            { role: "user", content: `${facts}\n\nExplain this compound: structure, uses, and safety.` },
+          ],
+        }),
+      });
+      if (!res.ok) throw new Error(`AI ${res.status}`);
+      const json = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+      const text = json.choices?.[0]?.message?.content?.trim();
+      if (!text) throw new Error("empty");
+      return { text, fallback: false };
+    } catch {
+      const local = findLocalAnswer(data.name) ?? findLocalAnswer(data.formula);
+      return {
+        text: [facts.replace("PubChem data — ", "").split("; ").join("\n"), local ? "\n" + local : ""].join(""),
+        fallback: true,
+      };
+    }
+  });
