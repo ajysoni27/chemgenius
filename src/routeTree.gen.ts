@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReactionsRouteImport } from './routes/reactions'
+import { Route as CompoundCidRouteImport } from './routes/compound.$cid'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,40 @@ const ReactionsRoute = ReactionsRouteImport.update({
   path: '/reactions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompoundCidRoute = CompoundCidRouteImport.update({
+  id: '/compound/$cid',
+  path: '/compound/$cid',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/reactions': typeof ReactionsRoute
+  '/compound/$cid': typeof CompoundCidRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/reactions': typeof ReactionsRoute
+  '/compound/$cid': typeof CompoundCidRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/reactions': typeof ReactionsRoute
+  '/compound/$cid': typeof CompoundCidRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/reactions'
+  fullPaths: '/' | '/reactions' | '/compound/$cid'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/reactions'
-  id: '__root__' | '/' | '/reactions'
+  to: '/' | '/reactions' | '/compound/$cid'
+  id: '__root__' | '/' | '/reactions' | '/compound/$cid'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ReactionsRoute: typeof ReactionsRoute
+  CompoundCidRoute: typeof CompoundCidRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReactionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/compound/$cid': {
+      id: '/compound/$cid'
+      path: '/compound/$cid'
+      fullPath: '/compound/$cid'
+      preLoaderRoute: typeof CompoundCidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ReactionsRoute: ReactionsRoute,
+  CompoundCidRoute: CompoundCidRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

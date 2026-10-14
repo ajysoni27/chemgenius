@@ -1,43 +1,86 @@
 import { useEffect, useRef, useState } from "react";
-import { Search, Loader2, FlaskConical } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Search, Loader2, FlaskConical, Sparkles } from "lucide-react";
 import { autocomplete, searchCompounds, type Compound } from "@/lib/pubchem";
+import { POPULAR } from "@/lib/popular";
+import { subscript } from "@/lib/chem";
 import { cn } from "@/lib/utils";
 
-/** Search box over PubChem (names, IUPAC, formulas, SMILES, CIDs). */
+type Sug = { label: string; cid?: number; formula?: string };
+
+function localMatches(q: string): Sug[] {
+  const s = q.trim().toLowerCase();
+  if (!s) return [];
+  return POPULAR.filter(
+    (p) => p.name.toLowerCase().includes(s) || p.formula.toLowerCase() === s || p.smiles.toLowerCase() === s,
+  ).map((p) => ({ label: p.name, cid: p.cid, formula: p.formula }));
+}
+
+/** Search box over PubChem (names, IUPAC, formulas, CAS, SMILES, CIDs) with local fallback. */
 export function CompoundSearch({
   onPick,
-  placeholder = "Search 100M+ compounds — name, formula, SMILES, IUPAC…",
+  placeholder = "Search 100M+ compounds — name, formula, CAS, SMILES…",
   size = "md",
   autoFocus,
 }: {
-  onPick: (c: Compound) => void;
+  onPick?: (c: Compound) => void;
   placeholder?: string;
   size?: "md" | "lg";
   autoFocus?: boolean;
 }) {
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
-  const [sugs, setSugs] = useState<string[]>([]);
+  const [sugs, setSugs] = useState<Sug[]>([]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState("");
+  const [loadingSugs, setLoadingSugs] = useState(false);
+  const [msg, setMsg] = useState("");
   const t = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     clearTimeout(t.current);
-    if (q.trim().length < 2) return setSugs([]);
-    t.current = setTimeout(() => autocomplete(q).then(setSugs), 220);
+    const term = q.trim();
+    if (term.length < 2) {
+      setSugs([]);
+      return;
+    }
+    const local = localMatches(term);
+    setSugs(local);
+    setLoadingSugs(true);
+    t.current = setTimeout(async () => {
+      const remote = await autocomplete(term).catch(() => [] as string[]);
+      const seen = new Set(local.map((l) => l.label.toLowerCase()));
+      const merged = [...local, ...remote.filter((r) => !seen.has(r.toLowerCase())).map((r) => ({ label: r }))].slice(0, 9);
+      // Formula / SMILES / CAS queries: offer direct lookup
+      if (!merged.length) merged.push({ label: term });
+      setSugs(merged);
+      setLoadingSugs(false);
+    }, 200);
   }, [q]);
 
-  async function go(term: string) {
-    if (!term.trim()) return;
-    setBusy(true);
-    setErr("");
-    setOpen(false);
-    const res = await searchCompounds(term);
-    setBusy(false);
-    if (!res.length) return setErr(`No compound found for "${term}"`);
-    onPick(res[0]);
+  function open_(cid: number, ai = false) {
     setQ("");
+    setOpen(false);
+    navigate({ to: "/compound/$cid", params: { cid: String(cid) }, search: ai ? { ai: 1 } : {} });
+  }
+
+  async function go(s: Sug | string, ai = false) {
+    const sug = typeof s === "string" ? { label: s } : s;
+    if (!sug.label.trim()) return;
+    if (sug.cid) return open_(sug.cid, ai);
+    setBusy(true);
+    setMsg("");
+    setOpen(false);
+    const res = await searchCompounds(sug.label).catch(() => [] as Compound[]);
+    setBusy(false);
+    if (!res.length) {
+      const local = localMatches(sug.label)[0];
+      if (local?.cid) return open_(local.cid, ai);
+      setMsg(`No match for "${sug.label}" — try a popular compound below.`);
+      return;
+    }
+    onPick?.(res[0]);
+    open_(res[0].cid, ai);
   }
 
   return (
@@ -45,7 +88,7 @@ export function CompoundSearch({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          go(q);
+          void go(sugs[0]?.cid ? sugs[0] : q);
         }}
         className={cn(
           "glass flex items-center gap-3 rounded-full px-5 transition focus-within:shadow-glow",
@@ -59,33 +102,48 @@ export function CompoundSearch({
           onChange={(e) => {
             setQ(e.target.value);
             setOpen(true);
-            setErr("");
+            setMsg("");
           }}
           onFocus={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           placeholder={placeholder}
-          className="w-full bg-transparent outline-none placeholder:text-muted-foreground"
+          aria-label="Search compounds"
+          className="w-full min-w-0 bg-transparent outline-none placeholder:text-muted-foreground"
         />
         <button type="submit" className="hidden rounded-full bg-gradient-neon px-4 py-1.5 text-sm font-semibold text-primary-foreground sm:block">
           Search
         </button>
       </form>
-      {err && <p className="mt-2 px-5 text-sm text-destructive">{err}</p>}
-      {open && sugs.length > 0 && (
-        <ul className="glass-strong absolute z-40 mt-2 w-full overflow-hidden rounded-2xl py-2 shadow-violet">
+      {msg && <p className="mt-2 px-5 text-sm text-muted-foreground">{msg}</p>}
+      {open && q.trim().length >= 2 && (sugs.length > 0 || loadingSugs) && (
+        <ul className="glass-strong absolute z-40 mt-2 w-full overflow-hidden rounded-2xl py-2 text-left shadow-violet">
           {sugs.map((s) => (
-            <li key={s}>
+            <li key={s.label} className="flex items-center hover:bg-secondary">
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => go(s)}
-                className="flex w-full items-center gap-3 px-5 py-2 text-left text-sm hover:bg-secondary"
+                onClick={() => void go(s)}
+                className="flex min-w-0 flex-1 items-center gap-3 px-5 py-2 text-left text-sm"
               >
-                <FlaskConical className="size-4 text-violet" />
-                {s}
+                <FlaskConical className="size-4 shrink-0 text-violet" />
+                <span className="truncate">{s.label}</span>
+                {s.formula && <span className="font-mono text-xs text-neon">{subscript(s.formula)}</span>}
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => void go(s, true)}
+                className="mr-3 flex shrink-0 items-center gap-1 rounded-full border border-violet/40 px-2 py-0.5 text-[11px] text-violet hover:bg-violet/10"
+              >
+                <Sparkles className="size-3" /> Ask AI
               </button>
             </li>
           ))}
+          {loadingSugs && (
+            <li className="flex items-center gap-2 px-5 py-2 text-xs text-muted-foreground">
+              <Loader2 className="size-3 animate-spin" /> Searching PubChem…
+            </li>
+          )}
         </ul>
       )}
     </div>

@@ -52,11 +52,11 @@ function Index() {
             Explore every molecule in 2D and 3D, predict reactions, compare compounds and explore all 118 elements.
           </motion.p>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="mx-auto mt-10 max-w-2xl">
-            <CompoundSearch size="lg" onPick={() => goLab()} />
+            <CompoundSearch size="lg" />
             <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
               Try:
-              {["Aspirin", "C6H12O6", "CC(=O)O", "2-acetoxybenzoic acid"].map((t) => (
-                <button key={t} onClick={() => goLab()} className="glass rounded-full px-3 py-1 font-mono hover:text-foreground">
+              {([["Aspirin", 2244], ["C6H12O6", 5793], ["CC(=O)O", 176], ["2-acetoxybenzoic acid", 2244]] as const).map(([t, id]) => (
+                <button key={t} onClick={() => navigate({ to: "/compound/$cid", params: { cid: String(id) } })} className="glass rounded-full px-3 py-1 font-mono hover:text-foreground">
                   {t}
                 </button>
               ))}
@@ -90,7 +90,7 @@ function Index() {
         <div className="no-scrollbar flex snap-x gap-4 overflow-x-auto px-4 pb-6 md:px-[max(1rem,calc((100vw-80rem)/2+1rem))]">
           {POPULAR.map((c, i) => (
             <motion.div key={c.cid} initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }} className="snap-start">
-              <button onClick={() => goLab()} className="text-left">
+              <button onClick={() => navigate({ to: "/compound/$cid", params: { cid: String(c.cid) } })} className="text-left">
                 <TiltCard className="w-60 shrink-0 p-4 transition hover:shadow-glow">
                   <Structure2D smiles={c.smiles} height={150} />
                   <div className="mt-2 flex items-center justify-between">
