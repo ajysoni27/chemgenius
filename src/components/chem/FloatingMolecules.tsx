@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 const MOLS = [
@@ -11,7 +12,7 @@ const MOLS = [
 
 function Shape({ kind }: { kind: string }) {
   if (kind === "hex") {
-    const pts = Array.from({ length: 6 }, (_, i) => [50 + 32 * Math.cos((Math.PI / 3) * i), 50 + 32 * Math.sin((Math.PI / 3) * i)]);
+    const pts = Array.from({ length: 6 }, (_, i) => [Math.round((50 + 32 * Math.cos((Math.PI / 3) * i)) * 100) / 100, Math.round((50 + 32 * Math.sin((Math.PI / 3) * i)) * 100) / 100]);
     return (
       <svg viewBox="0 0 100 100" className="size-full">
         <polygon points={pts.map((p) => p.join(",")).join(" ")} className="fill-none stroke-neon" strokeWidth="2" />
@@ -45,6 +46,9 @@ function Shape({ kind }: { kind: string }) {
 }
 
 export function FloatingMolecules() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
       {MOLS.map((m, i) => (
