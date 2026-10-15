@@ -107,6 +107,13 @@ function CompoundPage() {
       <p className="font-mono text-xs uppercase tracking-[0.3em] text-neon">Compound</p>
       <h1 className="text-3xl font-extrabold md:text-5xl">{c.title}</h1>
       <p className="mt-1 font-mono text-lg text-neon">{subscript(c.formula)}</p>
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new CustomEvent("open-chem-ai", { detail: `Tell me everything about ${c.title} (${c.formula}): uses, mechanism, medicine relevance, limitations and safety.` }))}
+        className="mt-3 rounded-full border border-violet/40 px-4 py-1.5 text-sm text-violet hover:bg-violet/10"
+      >
+        Ask AI about this compound
+      </button>
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         <div className="glass rounded-3xl p-4">

@@ -39,6 +39,16 @@ export function ChemAIChat() {
     if (open) inputRef.current?.focus();
   }, [open]);
 
+  useEffect(() => {
+    const h = (e: Event) => {
+      setOpen(true);
+      const d = (e as CustomEvent<string>).detail;
+      if (typeof d === "string") setInput(d);
+    };
+    window.addEventListener("open-chem-ai", h);
+    return () => window.removeEventListener("open-chem-ai", h);
+  }, []);
+
   async function send() {
     const text = input.trim();
     if (!text || busy) return;
@@ -106,10 +116,12 @@ export function ChemAIChat() {
                   >
                     {m.fallback && (
                       <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-amber-400">
-                        AI busy, showing saved info
+                        AI busy (credits low), showing saved info
                       </span>
                     )}
-                    <span className="whitespace-pre-wrap">{m.content}</span>
+                    <span className="whitespace-pre-wrap">
+                      {m.content.replace(/_AI busy[^_]*_/g, "").replace(/\*\*?/g, "").replace(/^#+\s*/gm, "").replace(/`/g, "").trim()}
+                    </span>
                   </div>
                 </div>
               ))}
