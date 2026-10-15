@@ -145,7 +145,7 @@ export function CompoundSearch({
             <>
               <div className="mb-2 flex items-center gap-2 text-xs text-violet"><Sparkles className="size-3.5" /> {ai.q}</div>
               {ai.fallback && <span className="mb-2 block text-[11px] font-medium uppercase tracking-wide text-amber-400">AI busy, showing saved info</span>}
-              <div className="whitespace-pre-wrap leading-relaxed">{ai.text.replace(/_AI busy[^_]*_/g, "").trim()}</div>
+              <div className="whitespace-pre-wrap leading-relaxed">{ai.text.replace(/_AI busy[^_]*_/g, "").replace(/\*\*?/g, "").replace(/^#+\s*/gm, "").trim()}</div>
             </>
           )}
         </div>
