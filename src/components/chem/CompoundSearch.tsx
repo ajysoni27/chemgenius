@@ -5,6 +5,12 @@ import { autocomplete, searchCompounds, type Compound } from "@/lib/pubchem";
 import { POPULAR } from "@/lib/popular";
 import { subscript } from "@/lib/chem";
 import { cn } from "@/lib/utils";
+import { askChemAI } from "@/lib/chem-ai.functions";
+
+function isQuestion(q: string) {
+  const t = q.trim();
+  return /\?$/.test(t) || /^(why|what|how|explain|when|which|who|define|describe|is|are|can|does|do)\b/i.test(t) || t.split(/\s+/).length >= 4;
+}
 
 type Sug = { label: string; cid?: number; formula?: string };
 
@@ -35,6 +41,23 @@ export function CompoundSearch({
   const [busy, setBusy] = useState(false);
   const [loadingSugs, setLoadingSugs] = useState(false);
   const [msg, setMsg] = useState("");
+  const [ai, setAi] = useState<{ q: string; text: string; fallback: boolean } | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+
+  async function askAI(question: string) {
+    setOpen(false);
+    setMsg("");
+    setAiBusy(true);
+    setAi(null);
+    try {
+      const r = await askChemAI({ data: { messages: [{ role: "user", content: question }] } });
+      setAi({ q: question, text: r.text, fallback: r.fallback });
+    } catch {
+      setAi({ q: question, text: "Try a compound name like Aspirin or ask again in a moment.", fallback: true });
+    } finally {
+      setAiBusy(false);
+    }
+  }
   const t = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
@@ -68,6 +91,7 @@ export function CompoundSearch({
     const sug = typeof s === "string" ? { label: s } : s;
     if (!sug.label.trim()) return;
     if (sug.cid) return open_(sug.cid, ai);
+    if (isQuestion(sug.label)) return askAI(sug.label);
     setBusy(true);
     setMsg("");
     setOpen(false);
@@ -76,8 +100,7 @@ export function CompoundSearch({
     if (!res.length) {
       const local = localMatches(sug.label)[0];
       if (local?.cid) return open_(local.cid, ai);
-      setMsg(`No match for "${sug.label}" — try a popular compound below.`);
-      return;
+      return askAI(sug.label);
     }
     onPick?.(res[0]);
     open_(res[0].cid, ai);
@@ -114,6 +137,19 @@ export function CompoundSearch({
           Search
         </button>
       </form>
+      {(aiBusy || ai) && (
+        <div className="glass mt-3 rounded-2xl px-5 py-4 text-left text-sm">
+          {aiBusy ? (
+            <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-4 animate-spin" /> SmartChem AI is thinking…</div>
+          ) : ai && (
+            <>
+              <div className="mb-2 flex items-center gap-2 text-xs text-violet"><Sparkles className="size-3.5" /> {ai.q}</div>
+              {ai.fallback && <span className="mb-2 block text-[11px] font-medium uppercase tracking-wide text-amber-400">AI busy, showing saved info</span>}
+              <div className="whitespace-pre-wrap leading-relaxed">{ai.text.replace(/_AI busy[^_]*_/g, "").replace(/\*\*?/g, "").replace(/^#+\s*/gm, "").trim()}</div>
+            </>
+          )}
+        </div>
+      )}
       {msg && <p className="mt-2 px-5 text-sm text-muted-foreground">{msg}</p>}
       {open && q.trim().length >= 2 && (sugs.length > 0 || loadingSugs) && (
         <ul className="glass-strong absolute z-40 mt-2 w-full overflow-hidden rounded-2xl py-2 text-left shadow-violet">
