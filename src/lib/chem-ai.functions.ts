@@ -2,7 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import elementsData from "./elements-data.json";
 import { POPULAR } from "./popular";
 
-const SYSTEM_PROMPT = `You are Pro Chemistry Expert. For any compound give: 1. IUPAC/Formula/Weight 2. How it works (mechanism) 3. Medicine use + dosage + side effects 4. Industrial & daily uses 5. Synthesis 6. Safety/GHS/limits 7. Tables + emojis. Never say I don't know.`;
+const SYSTEM_PROMPT = `You are SmartChemVision Expert. You know ALL 118 elements, 100M+ compounds from PubChem, organic/inorganic/physical chemistry, plus medicine/pharma knowledge (uses, dosages info, mechanisms - general info only). You must answer accurately with: Direct Answer, Detailed Explanation, Chemical Equation if needed, Uses, Applications, Limitations, Precautions & Safety (GHS), and Medicine relevance if any. Be concise but complete.`;
+
+const TOPICS: { k: RegExp; a: string }[] = [
+  {
+    k: /(soft|hard)\s*water|hardness/i,
+    a: "**Soft vs hard water** — saved info\n\nWater is *soft* when it contains very few dissolved Ca²⁺ and Mg²⁺ ions. Hardness comes from these ions (as bicarbonates, sulfates, chlorides).\n\n- Temporary hardness (bicarbonates) is removed by boiling: Ca(HCO₃)₂ → CaCO₃↓ + H₂O + CO₂↑\n- Permanent hardness is removed by washing soda or ion exchange: CaSO₄ + Na₂CO₃ → CaCO₃↓ + Na₂SO₄\n- Soft water lathers easily with soap because no insoluble Ca/Mg soap scum forms.",
+  },
+];
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
@@ -25,6 +32,8 @@ const ELEMENTS = elementsData as ElementRow[];
 
 function findLocalAnswer(query: string): string | null {
   const q = query.toLowerCase();
+  const topic = TOPICS.find((t) => t.k.test(query));
+  if (topic) return topic.a;
   // Element match by name or symbol
   const el =
     ELEMENTS.find((e) => q.includes(e.name.toLowerCase())) ??
