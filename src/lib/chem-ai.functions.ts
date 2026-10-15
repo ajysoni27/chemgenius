@@ -2,12 +2,24 @@ import { createServerFn } from "@tanstack/react-start";
 import elementsData from "./elements-data.json";
 import { POPULAR } from "./popular";
 
-const SYSTEM_PROMPT = `You are SmartChemVision Expert. You know ALL 118 elements, 100M+ compounds from PubChem, organic/inorganic/physical chemistry, plus medicine/pharma knowledge (uses, dosages info, mechanisms - general info only). You must answer accurately with: Direct Answer, Detailed Explanation, Chemical Equation if needed, Uses, Applications, Limitations, Precautions & Safety (GHS), and Medicine relevance if any. Be concise but complete.`;
+const SYSTEM_PROMPT = `You are SmartChemVision - World's Best Chemistry + Medicine Expert. You know 118 elements, 100M+ compounds (PubChem NIH), organic/inorganic/physical/analytical chemistry, plus pharma/medicine uses, mechanism, precautions, GHS safety, limitations, applications, dosage general info. For ANY user query (Why soft water is soft, what is buffer, aspirin formula etc) give: 1) Direct Accurate Answer 2) Explanation with equations 3) Uses 4) Applications 5) Limitations 6) Precautions & Safety 7) Medicine relevance if any. Never say 'No match' or 'try again'. If query is not a compound, explain it like a teacher. Reply in the user's language (e.g. Hindi/Hinglish if they write that way). Use plain text, no markdown asterisks.`;
 
 const TOPICS: { k: RegExp; a: string }[] = [
   {
     k: /(soft|hard)\s*water|hardness/i,
-    a: "**Soft vs hard water** — saved info\n\nWater is *soft* when it contains very few dissolved Ca²⁺ and Mg²⁺ ions. Hardness comes from these ions (as bicarbonates, sulfates, chlorides).\n\n- Temporary hardness (bicarbonates) is removed by boiling: Ca(HCO₃)₂ → CaCO₃↓ + H₂O + CO₂↑\n- Permanent hardness is removed by washing soda or ion exchange: CaSO₄ + Na₂CO₃ → CaCO₃↓ + Na₂SO₄\n- Soft water lathers easily with soap because no insoluble Ca/Mg soap scum forms.",
+    a: "Soft vs hard water\n\nWater is soft when it contains very few dissolved Ca²⁺ and Mg²⁺ ions. Hardness comes from these ions (as bicarbonates, sulfates, chlorides).\n\n- Temporary hardness (bicarbonates) is removed by boiling: Ca(HCO₃)₂ → CaCO₃↓ + H₂O + CO₂↑\n- Permanent hardness is removed by washing soda or ion exchange: CaSO₄ + Na₂CO₃ → CaCO₃↓ + Na₂SO₄\n- Soft water lathers easily with soap because no insoluble Ca/Mg soap scum forms.",
+  },
+  {
+    k: /\bph\b/i,
+    a: "pH (potential of hydrogen)\n\npH = −log[H⁺]. It measures how acidic or basic a solution is on a 0–14 scale at 25 °C.\n\n- pH < 7: acidic (lemon juice ≈ 2, stomach acid ≈ 1.5)\n- pH = 7: neutral (pure water)\n- pH > 7: basic (soap ≈ 10, NaOH solution ≈ 13)\n- Water: H₂O ⇌ H⁺ + OH⁻, Kw = 1×10⁻¹⁴\n\nUses: water quality, agriculture (soil pH), medicine (blood pH 7.35–7.45), food and cosmetics.\nSafety: very low or high pH liquids are corrosive — wear gloves and goggles.\n\nHindi: pH batata hai ki koi ghol kitna amliya (acidic) ya kshariya (basic) hai.",
+  },
+  {
+    k: /buffer/i,
+    a: "Buffer solution\n\nA buffer resists pH change when small amounts of acid or base are added. It is a weak acid + its salt (CH₃COOH/CH₃COONa) or a weak base + its salt (NH₄OH/NH₄Cl).\n\nHenderson equation: pH = pKa + log([salt]/[acid])\n\nUses: blood (H₂CO₃/HCO₃⁻ keeps pH ≈ 7.4), medicines, fermentation, lab analysis.\nLimitation: works only within about pKa ± 1.",
+  },
+  {
+    k: /acid|base|alkali/i,
+    a: "Acids and bases\n\n- Arrhenius: acids give H⁺, bases give OH⁻ in water.\n- Brønsted–Lowry: acids donate protons, bases accept them.\n- Neutralisation: HCl + NaOH → NaCl + H₂O (exothermic)\n\nSafety: strong acids/bases are corrosive — always add acid to water, never water to acid.",
   },
 ];
 
