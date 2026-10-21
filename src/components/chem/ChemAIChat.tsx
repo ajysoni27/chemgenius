@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FlaskConical, X, Send, Loader2 } from "lucide-react";
-import { streamChemAI, cleanAI } from "@/lib/chem-ai-client";
+import { askChemAI } from "@/lib/chem-ai.functions";
 
-type Msg = { role: "user" | "assistant"; content: string; error?: boolean };
+type Msg = { role: "user" | "assistant"; content: string; fallback?: boolean };
 
 const STORAGE_KEY = "scv-chem-ai-chat";
 
@@ -57,9 +57,15 @@ export function ChemAIChat() {
     setMessages(next);
     setBusy(true);
     try {
-      await streamChemAI(next, (t) => setMessages([...next, { role: "assistant", content: t }]));
-    } catch (e) {
-      setMessages([...next, { role: "assistant", content: `AI could not answer: ${(e as Error).message}`, error: true }]);
+      const res = await askChemAI({
+        data: { messages: next.map((m) => ({ role: m.role, content: m.content })) },
+      });
+      setMessages([...next, { role: "assistant", content: res.text, fallback: res.fallback }]);
+    } catch {
+      setMessages([
+        ...next,
+        { role: "assistant", content: "_AI busy, showing saved info. Please try again._", fallback: true },
+      ]);
     } finally {
       setBusy(false);
       inputRef.current?.focus();
@@ -108,15 +114,20 @@ export function ChemAIChat() {
                         : "inline-block max-w-[95%] px-1 text-sm leading-relaxed text-foreground"
                     }
                   >
+                    {m.fallback && (
+                      <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-amber-400">
+                        AI busy (credits low), showing saved info
+                      </span>
+                    )}
                     <span className="whitespace-pre-wrap">
-                      {cleanAI(m.content).trim()}
+                      {m.content.replace(/_AI busy[^_]*_/g, "").replace(/\*\*?/g, "").replace(/^#+\s*/gm, "").replace(/`/g, "").trim()}
                     </span>
                   </div>
                 </div>
               ))}
-              {busy && messages[messages.length - 1]?.role === "user" && (
+              {busy && (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> AI is thinking…
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Thinking…
                 </div>
               )}
             </div>

@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReactionsRouteImport } from './routes/reactions'
-import { Route as ApiChemAiRouteImport } from './routes/api/chem-ai'
 import { Route as CompoundCidRouteImport } from './routes/compound.$cid'
 
 const IndexRoute = IndexRouteImport.update({
@@ -24,11 +23,6 @@ const ReactionsRoute = ReactionsRouteImport.update({
   path: '/reactions',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiChemAiRoute = ApiChemAiRouteImport.update({
-  id: '/api/chem-ai',
-  path: '/api/chem-ai',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CompoundCidRoute = CompoundCidRouteImport.update({
   id: '/compound/$cid',
   path: '/compound/$cid',
@@ -38,34 +32,30 @@ const CompoundCidRoute = CompoundCidRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/reactions': typeof ReactionsRoute
-  '/api/chem-ai': typeof ApiChemAiRoute
   '/compound/$cid': typeof CompoundCidRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/reactions': typeof ReactionsRoute
-  '/api/chem-ai': typeof ApiChemAiRoute
   '/compound/$cid': typeof CompoundCidRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/reactions': typeof ReactionsRoute
-  '/api/chem-ai': typeof ApiChemAiRoute
   '/compound/$cid': typeof CompoundCidRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/reactions' | '/api/chem-ai' | '/compound/$cid'
+  fullPaths: '/' | '/reactions' | '/compound/$cid'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/reactions' | '/api/chem-ai' | '/compound/$cid'
-  id: '__root__' | '/' | '/reactions' | '/api/chem-ai' | '/compound/$cid'
+  to: '/' | '/reactions' | '/compound/$cid'
+  id: '__root__' | '/' | '/reactions' | '/compound/$cid'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ReactionsRoute: typeof ReactionsRoute
-  ApiChemAiRoute: typeof ApiChemAiRoute
   CompoundCidRoute: typeof CompoundCidRoute
 }
 
@@ -85,13 +75,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReactionsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/chem-ai': {
-      id: '/api/chem-ai'
-      path: '/api/chem-ai'
-      fullPath: '/api/chem-ai'
-      preLoaderRoute: typeof ApiChemAiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/compound/$cid': {
       id: '/compound/$cid'
       path: '/compound/$cid'
@@ -105,7 +88,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ReactionsRoute: ReactionsRoute,
-  ApiChemAiRoute: ApiChemAiRoute,
   CompoundCidRoute: CompoundCidRoute,
 }
 export const routeTree = rootRouteImport
