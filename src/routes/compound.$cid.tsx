@@ -6,7 +6,7 @@ import { POPULAR } from "@/lib/popular";
 import { subscript } from "@/lib/chem";
 import { Structure2D } from "@/components/chem/Structure2D";
 import { Structure3D } from "@/components/chem/Structure3D";
-import { explainCompound } from "@/lib/chem-ai.functions";
+import { streamChemAI, cleanAI } from "@/lib/chem-ai-client";
 
 export const Route = createFileRoute("/compound/$cid")({
   validateSearch: (s: Record<string, unknown>): { ai?: number } => (s.ai ? { ai: 1 } : {}),
@@ -32,7 +32,7 @@ function CompoundPage() {
   const [c, setC] = useState<Compound | null>(null);
   const [state, setState] = useState<"loading" | "ok" | "none">("loading");
   const [ghs, setGhs] = useState<GhsInfo | null>(null);
-  const [ai, setAi] = useState<{ text: string; fallback: boolean } | null>(null);
+  const [ai, setAi] = useState<{ text: string; error?: boolean } | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
 
   useEffect(() => {
@@ -58,12 +58,14 @@ function CompoundPage() {
   async function askAI(comp: Compound, cancelled: () => boolean = () => false) {
     setAiBusy(true);
     try {
-      const r = await explainCompound({
-        data: { name: comp.title, formula: comp.formula, iupac: comp.iupac ?? "", mw: comp.mw, smiles: comp.smiles },
+      const q = `As a chemistry professor, explain ${comp.title} (formula ${comp.formula}, IUPAC ${comp.iupac || "n/a"}, MW ${comp.mw || "n/a"} g/mol, SMILES ${comp.smiles}): structure & bonding, how it works, uses, medicine relevance, industrial applications, limitations, safety/GHS.`;
+      await streamChemAI([{ role: "user", content: q }], (t) => {
+        if (cancelled()) return;
+        setAiBusy(false);
+        setAi({ text: t });
       });
-      if (!cancelled()) setAi(r);
-    } catch {
-      if (!cancelled()) setAi({ text: "AI busy, showing saved info. Try again in a moment.", fallback: true });
+    } catch (e) {
+      if (!cancelled()) setAi({ text: `AI could not answer: ${(e as Error).message}`, error: true });
     } finally {
       if (!cancelled()) setAiBusy(false);
     }
@@ -167,13 +169,12 @@ function CompoundPage() {
           </div>
           {aiBusy && (
             <p className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" /> Thinking…
+              <Loader2 className="size-4 animate-spin" /> AI is thinking…
             </p>
           )}
           {!aiBusy && ai && (
             <>
-              {ai.fallback && <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">AI busy, showing saved info</p>}
-              <div className="whitespace-pre-wrap text-sm leading-relaxed">{ai.text}</div>
+              <div className="whitespace-pre-wrap text-sm leading-relaxed">{cleanAI(ai.text)}</div>
             </>
           )}
         </div>
