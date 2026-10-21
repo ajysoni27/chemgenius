@@ -5,7 +5,7 @@ import { autocomplete, searchCompounds, type Compound } from "@/lib/pubchem";
 import { POPULAR } from "@/lib/popular";
 import { subscript } from "@/lib/chem";
 import { cn } from "@/lib/utils";
-import { askChemAI } from "@/lib/chem-ai.functions";
+import { streamChemAI, cleanAI } from "@/lib/chem-ai-client";
 
 function isQuestion(q: string) {
   const t = q.trim();
@@ -41,7 +41,7 @@ export function CompoundSearch({
   const [busy, setBusy] = useState(false);
   const [loadingSugs, setLoadingSugs] = useState(false);
   const [msg, setMsg] = useState("");
-  const [ai, setAi] = useState<{ q: string; text: string; fallback: boolean } | null>(null);
+  const [ai, setAi] = useState<{ q: string; text: string; error?: boolean } | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
 
   async function askAI(question: string) {
@@ -50,10 +50,12 @@ export function CompoundSearch({
     setAiBusy(true);
     setAi(null);
     try {
-      const r = await askChemAI({ data: { messages: [{ role: "user", content: question }] } });
-      setAi({ q: question, text: r.text, fallback: r.fallback });
-    } catch {
-      setAi({ q: question, text: "Try a compound name like Aspirin or ask again in a moment.", fallback: true });
+      await streamChemAI([{ role: "user", content: question }], (t) => {
+        setAiBusy(false);
+        setAi({ q: question, text: t });
+      });
+    } catch (e) {
+      setAi({ q: question, text: `AI could not answer: ${(e as Error).message}`, error: true });
     } finally {
       setAiBusy(false);
     }
@@ -140,12 +142,11 @@ export function CompoundSearch({
       {(aiBusy || ai) && (
         <div className="glass mt-3 rounded-2xl px-5 py-4 text-left text-sm">
           {aiBusy ? (
-            <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-4 animate-spin" /> SmartChem AI is thinking…</div>
+            <div className="flex items-center gap-2 text-muted-foreground"><Loader2 className="size-4 animate-spin" /> AI is thinking…</div>
           ) : ai && (
             <>
               <div className="mb-2 flex items-center gap-2 text-xs text-violet"><Sparkles className="size-3.5" /> {ai.q}</div>
-              {ai.fallback && <span className="mb-2 block text-[11px] font-medium uppercase tracking-wide text-amber-400">AI busy, showing saved info</span>}
-              <div className="whitespace-pre-wrap leading-relaxed">{ai.text.replace(/_AI busy[^_]*_/g, "").replace(/\*\*?/g, "").replace(/^#+\s*/gm, "").trim()}</div>
+              <div className="whitespace-pre-wrap leading-relaxed">{cleanAI(ai.text).trim()}</div>
             </>
           )}
         </div>

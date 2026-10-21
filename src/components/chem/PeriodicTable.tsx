@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { streamChemAI, cleanAI } from "@/lib/chem-ai-client";
 import { motion } from "framer-motion";
 import { ELEMENTS, classify, oxideBehaviour, CLASS_META, type Element, type ElClass } from "@/lib/chem";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -108,10 +110,36 @@ function Row({ k, v }: { k: string; v: React.ReactNode }) {
 }
 
 function ElementDialog({ e, onClose }: { e: Element | null; onClose: () => void }) {
-  const [, setForEl] = useState<number | null>(null);
+  const [ai, setAi] = useState<{ text: string; error?: boolean } | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!e) return;
+    const ctl = new AbortController();
+    setAi(null);
+    setBusy(true);
+    streamChemAI(
+      [
+        {
+          role: "user",
+          content: `As a chemistry professor, give full live details of the element ${e.name} (${e.s}, atomic number ${e.n}): who discovered it and when, properties, uses, medicine/biological role, precautions & safety, and educational key points.`,
+        },
+      ],
+      (t) => {
+        setBusy(false);
+        setAi({ text: t });
+      },
+      ctl.signal,
+    )
+      .catch((err: Error) => {
+        if (!ctl.signal.aborted) setAi({ text: `AI could not answer: ${err.message}`, error: true });
+      })
+      .finally(() => !ctl.signal.aborted && setBusy(false));
+    return () => ctl.abort();
+  }, [e]);
 
   return (
-    <Dialog open={!!e} onOpenChange={(o) => !o && (onClose(), setForEl(null))}>
+    <Dialog open={!!e} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="glass-strong max-h-[85vh] max-w-2xl overflow-y-auto border-border">
         {e && (
           <>
@@ -127,18 +155,18 @@ function ElementDialog({ e, onClose }: { e: Element | null; onClose: () => void 
                   </span>
                 </span>
               </DialogTitle>
-              <DialogDescription>{e.sum}</DialogDescription>
+              <DialogDescription>Live AI professor explanation</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Row k="Molar mass" v={`${e.m} g/mol`} />
-              <Row k="Electron config." v={<span className="font-mono">{e.ec}</span>} />
-              <Row k="Electronegativity" v={e.en ?? "—"} />
-              <Row k="Density" v={e.d ? `${e.d} g/cm³` : "—"} />
-              <Row k="Melting point" v={e.mp ? `${e.mp} K` : "—"} />
-              <Row k="Boiling point" v={e.bp ? `${e.bp} K` : "—"} />
-              <Row k="Discovered by" v={e.by ?? "Ancient / unknown"} />
-              <Row k="Acid/base (oxide)" v={oxideBehaviour(e)} />
-            </div>
+            {busy && (
+              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="size-4 animate-spin text-neon" /> AI is thinking…
+              </p>
+            )}
+            {ai && (
+              <div className={cn("whitespace-pre-wrap text-sm leading-relaxed", ai.error && "text-muted-foreground")}>
+                {cleanAI(ai.text)}
+              </div>
+            )}
           </>
         )}
       </DialogContent>
