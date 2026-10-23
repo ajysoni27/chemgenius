@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CompareRouteImport } from './routes/compare'
 import { Route as ReactionsRouteImport } from './routes/reactions'
+import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as CompoundCidRouteImport } from './routes/compound.$cid'
 
 const IndexRoute = IndexRouteImport.update({
@@ -18,9 +20,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CompareRoute = CompareRouteImport.update({
+  id: '/compare',
+  path: '/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReactionsRoute = ReactionsRouteImport.update({
   id: '/reactions',
   path: '/reactions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ToolsRoute = ToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompoundCidRoute = CompoundCidRouteImport.update({
@@ -31,31 +43,39 @@ const CompoundCidRoute = CompoundCidRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/compare': typeof CompareRoute
   '/reactions': typeof ReactionsRoute
+  '/tools': typeof ToolsRoute
   '/compound/$cid': typeof CompoundCidRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/compare': typeof CompareRoute
   '/reactions': typeof ReactionsRoute
+  '/tools': typeof ToolsRoute
   '/compound/$cid': typeof CompoundCidRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/compare': typeof CompareRoute
   '/reactions': typeof ReactionsRoute
+  '/tools': typeof ToolsRoute
   '/compound/$cid': typeof CompoundCidRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/reactions' | '/compound/$cid'
+  fullPaths: '/' | '/compare' | '/reactions' | '/tools' | '/compound/$cid'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/reactions' | '/compound/$cid'
-  id: '__root__' | '/' | '/reactions' | '/compound/$cid'
+  to: '/' | '/compare' | '/reactions' | '/tools' | '/compound/$cid'
+  id: '__root__' | '/' | '/compare' | '/reactions' | '/tools' | '/compound/$cid'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CompareRoute: typeof CompareRoute
   ReactionsRoute: typeof ReactionsRoute
+  ToolsRoute: typeof ToolsRoute
   CompoundCidRoute: typeof CompoundCidRoute
 }
 
@@ -68,11 +88,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/compare': {
+      id: '/compare'
+      path: '/compare'
+      fullPath: '/compare'
+      preLoaderRoute: typeof CompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reactions': {
       id: '/reactions'
       path: '/reactions'
       fullPath: '/reactions'
       preLoaderRoute: typeof ReactionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tools': {
+      id: '/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof ToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compound/$cid': {
@@ -87,7 +121,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CompareRoute: CompareRoute,
   ReactionsRoute: ReactionsRoute,
+  ToolsRoute: ToolsRoute,
   CompoundCidRoute: CompoundCidRoute,
 }
 export const routeTree = rootRouteImport
